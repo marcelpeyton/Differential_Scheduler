@@ -1,3 +1,4 @@
+import { Appointment } from '../../../server/src/models/AppointmentClass.js';
 const ServiceSelection = () => {
     return (
       <section>
@@ -5,5 +6,9 @@ const ServiceSelection = () => {
       </section>
     );
   };
+
+  const newAppointment = new Appointment(); 
+
+  newAppointment.calculateTime();
   
   export default ServiceSelection;
