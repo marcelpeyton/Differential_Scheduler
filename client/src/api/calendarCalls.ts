@@ -1,7 +1,9 @@
 export async function fetchCalendarEvents() {
     try {
-      const response = await fetch("http://localhost:3001/api/calendar/events");
-      console.log(response);
+      const response = await fetch('http://localhost:3001/api/calendar/events', {
+        method: 'GET',
+        mode: 'no-cors'
+      });
       if (!response.ok) {
         throw new Error(`Error fetching events: ${response.statusText}`);
       }

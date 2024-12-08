@@ -21,6 +21,7 @@ interface TimeSlot {
 // Time Period is two ClockTimes (24 hour clock). One representing the start and the other the finish.
 // Availability is an unused option on time period. It does nothing as of right now.
 export interface TimePeriod{
+  date?: string
   start : ClockTime
   end : ClockTime
   availability? : boolean
@@ -87,15 +88,36 @@ export class TimeSlots {
 
   // This is the function which changes availability. With a TimePeriod inputted, this function validates there is no overlapping busyness and then pushes the input into occupiedTimes and changes availableTimes property of the TimeSlots class. 
   // !! Right now this function does nothing when it detects an overlap. This may not be desired.
-  public markTimePeriodBusy(period : TimePeriod){
-    if(!this.validateTimePeriodCanBeMarked(period)){
-      // do nothing validation failed
-      console.log("Validation failed! Overlapping times")
-    }else{
-      this.occupiedTimes.push(period)
-      this.changeAvailabilityArray(period)
+  markTimePeriodBusy(newPeriod: TimePeriod) {
+    // Check if the period is already in occupiedTimes
+    const alreadyMarked = this.occupiedTimes.some(existingPeriod =>
+        existingPeriod.date === newPeriod.date &&
+        existingPeriod.start.hours === newPeriod.start.hours &&
+        existingPeriod.start.minutes === newPeriod.start.minutes &&
+        existingPeriod.end.hours === newPeriod.end.hours &&
+        existingPeriod.end.minutes === newPeriod.end.minutes
+    );
+
+    if (alreadyMarked) {
+        console.log("Period is already marked as busy:", newPeriod);
+        return; // Exit the function
     }
-  }
+
+    // Check for overlap with existing periods on the same date
+    const overlap = this.occupiedTimes.some(existingPeriod =>
+        existingPeriod.date === newPeriod.date &&
+        this.doesTimePeriodsOverlap(existingPeriod, newPeriod)
+    );
+
+    if (overlap) {
+        console.log(`Validation failed! Overlapping times for period: ${JSON.stringify(newPeriod)}`);
+        return;
+    }
+
+    // If no overlaps and not already marked, add the new period
+    this.occupiedTimes.push(newPeriod);
+    console.log("Period marked as busy:", newPeriod);
+}
 
   // This function accepts an occupied time period and then checks which collisions it has with the AvailableTimes property of the class. If there is no collision this function does nothing. If there is one, this function modifies availableTimes so it excludes all times in the occupiedPeriod. 
   public changeAvailabilityArray(occupiedPeriod : TimePeriod){
@@ -125,19 +147,23 @@ export class TimeSlots {
         if(newAvailability.length === 0){
           newAvailability = insertedTimePeriod;
         }
-        else{
-          let insertedFlag = false;      
-          for(let x = 0; x<newAvailability.length; x++){
-            if(newAvailability[x].start.hours > insertedTimePeriod[0].end.hours){
-              // Insert the array!
+        else {
+          let insertedFlag = false;
+          
+          for(let x = 0; x < newAvailability.length; x++) {
+            // Check if the 'end' property exists and 'start.hours' of the inserted period is greater than the end hours of the current period
+            if (newAvailability[x].start && newAvailability[x].end && insertedTimePeriod[0].start.hours > newAvailability[x].end.hours) {
+              // Insert the array
               newAvailability.splice(x, 0, ...insertedTimePeriod);
-              insertedFlag = true
+              insertedFlag = true;
               break;
             }
           }
-          if(!insertedFlag){
-            newAvailability.splice(newAvailability.length, 0, ...insertedTimePeriod);
-          }       
+        
+          if (!insertedFlag) {
+            // If not inserted within the loop, append to the end
+            newAvailability.push(...insertedTimePeriod);
+          }
         }
         // Update the array on the class.
         this.availableTimes = newAvailability;
