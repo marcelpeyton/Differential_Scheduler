@@ -2,6 +2,17 @@ import { useState, type FormEvent, type ChangeEvent } from 'react';
 import Auth from '../utils/auth';
 import { login } from '../api/authAPI';
 import type { UserLogin } from '../interfaces/UserLogin';
+import { useNavigate } from 'react-router-dom'; 
+
+const navigate = useNavigate(); // Initialize navigate for navigation
+
+const handlePrevious = () => {
+  navigate('/serviceSelection'); 
+};
+
+const handleNext = () => {
+  navigate('/propertyDetails'); 
+};
 
 const Login = () => {
   const [loginData, setLoginData] = useState<UserLogin>({
